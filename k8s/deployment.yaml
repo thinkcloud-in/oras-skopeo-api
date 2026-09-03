@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: devraq-oras-skopeo-api
-  namespace: default
+  namespace: thinkcloud
   labels:
     app: devraq-oras-skopeo-api
 spec:
@@ -17,11 +17,11 @@ spec:
     spec:
       containers:
         - name: devraq-oras-skopeo-api
-          image: devraq-oras-skopeo-api:1.0.0
-          # Image is loaded locally on the node via `docker load` (no registry push) — never pull.
+          image: docker.io/library/devraq-oras-skopeo-api:1.0.0
+          # Image is loaded locally on the node via `ctr images import` (no registry push) — never pull.
           imagePullPolicy: Never
           ports:
-            - containerPort: 8000
+            - containerPort: 8009
           resources:
             requests:
               cpu: "100m"
@@ -32,23 +32,21 @@ spec:
           readinessProbe:
             httpGet:
               path: /health
-              port: 8000
+              port: 8009
             initialDelaySeconds: 5
             periodSeconds: 10
           livenessProbe:
             httpGet:
               path: /health
-              port: 8000
+              port: 8009
             initialDelaySeconds: 10
             periodSeconds: 30
           volumeMounts:
             # push/pull endpoints read & write files under /library/harbor/* by default
-            # (source_path, file_path, dest_dir) — this must be the same shared path
-            # other services on the host use to drop/collect those files.
-            - name: harbor-data
-              mountPath: /library/harbor
+            # (source_path, file_path, dest_dir) — shares the same PVC as backend/frontend.
+            - name: library-storage
+              mountPath: /library
       volumes:
-        - name: harbor-data
-          hostPath:
-            path: /library/harbor
-            type: DirectoryOrCreate
+        - name: library-storage
+          persistentVolumeClaim:
+            claimName: library-pvc
