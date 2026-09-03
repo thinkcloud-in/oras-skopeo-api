@@ -37,7 +37,7 @@ def push_artifact(req: OrasPushRequest):
         cmd = ["oras", "push", dest, *push_files, "-u", req.username, "-p", req.password, "--disable-path-validation"]
         if req.plain_http:
             cmd.append("--plain-http")
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=600, cwd=extract_dir)
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=10800, cwd=extract_dir)
         if result.returncode != 0:
             raise HTTPException(500, detail=result.stderr)
 
@@ -55,7 +55,7 @@ def pull_artifact(req: OrasPullRequest):
            "-o", req.dest_dir, "--allow-path-traversal"]
     if req.plain_http:
         cmd.append("--plain-http")
-    result = subprocess.run(cmd, capture_output=True, text=True, timeout=600)
+    result = subprocess.run(cmd, capture_output=True, text=True, timeout=10800)
     if result.returncode != 0:
         raise HTTPException(500, detail=result.stderr)
 

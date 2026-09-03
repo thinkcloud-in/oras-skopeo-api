@@ -16,7 +16,7 @@ def push_image(req: PushRequest):
     cmd = ["skopeo", "copy", src, dest, f"--dest-creds={req.username}:{req.password}"]
     if not req.tls_verify:
         cmd.append("--dest-tls-verify=false")
-    result = subprocess.run(cmd, capture_output=True, text=True, timeout=600)
+    result = subprocess.run(cmd, capture_output=True, text=True, timeout=10800)
     if result.returncode != 0:
         raise HTTPException(500, detail=result.stderr)
     return {"status": "success", "output": result.stdout, "pushed_to": dest}
@@ -36,7 +36,7 @@ def pull_image(req: PullImageRequest):
     cmd = ["skopeo", "copy", src, dest, f"--src-creds={req.username}:{req.password}"]
     if not req.tls_verify:
         cmd.append("--src-tls-verify=false")
-    result = subprocess.run(cmd, capture_output=True, text=True, timeout=600)
+    result = subprocess.run(cmd, capture_output=True, text=True, timeout=10800)
     if result.returncode != 0:
         raise HTTPException(500, detail=result.stderr)
     if not os.path.exists(tar_path):
