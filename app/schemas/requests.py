@@ -59,3 +59,8 @@ class ProxmoxPushRequest(BaseModel):
     # upload completes -- separate from the upload's own timeout, since
     # Proxmox still has to write/verify the file after receiving it.
     poll_timeout: int = 3600
+    # Retries the curl upload itself on failure (network blip, momentary
+    # Proxmox unavailability) -- deliberately NOT re-pulling from Harbor,
+    # since the file is already staged here; only the upload is retried.
+    max_retries: int = 3
+    retry_delay_seconds: int = 15
