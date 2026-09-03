@@ -26,7 +26,7 @@ pipeline {
             }
         }
 
-        stage('Checkout Backend Code') {
+        stage('Checkout Oras Skopeo Code') {
             steps {
                 dir("${WORKDIR}") {
                     deleteDir()
@@ -82,7 +82,7 @@ pipeline {
             }
         }
 
-        stage('Deploy Backend on Remote Server') {
+        stage('Deploy Oras Skopeo on Remote Server') {
             steps {
                 sh """
                 echo "➡️ Deploying oras-skopeo-api on remote server..."
