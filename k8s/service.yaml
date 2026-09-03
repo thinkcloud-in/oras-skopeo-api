@@ -1,8 +1,8 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: devraq-oras-skopeo-api
-  namespace: default
+  name: devraq-oras-skopeo-api-svc
+  namespace: thinkcloud
   labels:
     app: devraq-oras-skopeo-api
 spec:
@@ -10,6 +10,6 @@ spec:
   selector:
     app: devraq-oras-skopeo-api
   ports:
-    - port: 8000
-      targetPort: 8000
+    - port: 8009
+      targetPort: 8009
       protocol: TCP
