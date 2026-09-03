@@ -64,6 +64,11 @@ pipeline {
                     ssh -i ${SSH_KEY} -o StrictHostKeyChecking=no \
                         ${REMOTE_USER}@${REMOTE_HOST} "mkdir -p ${REMOTE_TAR_DIR} ${REMOTE_BASE_DIR}"
 
+                    # Remove any old/stale yaml so a rename or removed file never
+                    # lingers on the remote host and gets silently re-applied later
+                    ssh -i ${SSH_KEY} -o StrictHostKeyChecking=no \
+                        ${REMOTE_USER}@${REMOTE_HOST} "rm -f ${REMOTE_BASE_DIR}/*.yaml"
+
                     # Copy TAR file
                     scp -i ${SSH_KEY} -o StrictHostKeyChecking=no \
                         ${TAR_DIR}/${TAR_FILE} \
