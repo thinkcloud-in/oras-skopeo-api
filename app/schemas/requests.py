@@ -45,3 +45,17 @@ class OrasPullRequest(BaseModel):
     tag: str
     dest_dir: str = "/library/harbor/pull_artifacts"
     plain_http: bool = True
+
+
+class ProxmoxPushRequest(BaseModel):
+    file_path: str
+    node_host: str
+    node_name: str
+    filename: str
+    proxmox_token: str
+    storage: str = "local"
+    tls_verify: bool = False
+    # How long to wait for the Proxmox import task to finish after the
+    # upload completes -- separate from the upload's own timeout, since
+    # Proxmox still has to write/verify the file after receiving it.
+    poll_timeout: int = 3600
