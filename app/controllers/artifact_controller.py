@@ -1,3 +1,4 @@
+import json
 import os
 import shutil
 import subprocess
@@ -25,9 +26,21 @@ def push_artifact(req: OrasPushRequest):
             raise HTTPException(400, f"Not a valid zip file: {req.file_path}")
 
         push_files = []
+        annotations = {}
         for root, _, files in os.walk(extract_dir):
             for fname in files:
                 if fname in EXCLUDED_ARTIFACT_FILES:
+                    if fname == "version_metadata.json":
+                        try:
+                            with open(os.path.join(root, fname), "r", encoding="utf-8") as mf:
+                                metadata = json.load(mf)
+                            if isinstance(metadata, dict):
+                                annotations = {
+                                    str(key): value if isinstance(value, str) else json.dumps(value)
+                                    for key, value in metadata.items()
+                                }
+                        except (json.JSONDecodeError, OSError):
+                            pass
                     continue
                 push_files.append(os.path.relpath(os.path.join(root, fname), extract_dir))
 
@@ -35,6 +48,8 @@ def push_artifact(req: OrasPushRequest):
             raise HTTPException(400, "Zip contained no files to push after excluding version_metadata.json")
 
         cmd = ["oras", "push", dest, *push_files, "-u", req.username, "-p", req.password, "--disable-path-validation"]
+        for key, value in annotations.items():
+            cmd.extend(["--annotation", f"{key}={value}"])
         if req.plain_http:
             cmd.append("--plain-http")
         result = subprocess.run(cmd, capture_output=True, text=True, timeout=10800, cwd=extract_dir)
@@ -43,7 +58,13 @@ def push_artifact(req: OrasPushRequest):
 
         os.remove(req.file_path)
 
-        return {"status": "success", "output": result.stdout, "pushed_to": dest, "files_pushed": push_files}
+        return {
+            "status": "success",
+            "output": result.stdout,
+            "pushed_to": dest,
+            "files_pushed": push_files,
+            "annotations": annotations,
+        }
     finally:
         shutil.rmtree(extract_dir, ignore_errors=True)
 
