@@ -64,3 +64,16 @@ class ProxmoxPushRequest(BaseModel):
     # since the file is already staged here; only the upload is retried.
     max_retries: int = 3
     retry_delay_seconds: int = 15
+
+
+class VmPushRequest(BaseModel):
+    file_path: str
+    vm_host: str
+    vm_ssh_user: str
+    vm_ssh_pass: str
+    dest_path: str
+    # Retries the SFTP transfer itself on failure -- deliberately NOT
+    # re-pulling from Harbor, since the file is already staged here; only
+    # the transfer to the VM is retried.
+    max_retries: int = 3
+    retry_delay_seconds: int = 15
