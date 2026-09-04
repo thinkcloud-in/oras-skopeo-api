@@ -48,6 +48,14 @@ def _run_curl_upload(req: ProxmoxPushRequest) -> dict:
 
     cmd = [
         "curl", "-s", "-S",
+        # Proxmox's pveproxy rejects chunked transfer encoding on this
+        # endpoint ("chunked transfer encoding not supported"). curl's -F
+        # multipart encoder is supposed to precompute Content-Length for a
+        # local file, but can fall back to chunked depending on the
+        # curl/libcurl build. Forcing HTTP/1.0 removes chunked encoding as
+        # an option entirely, so curl has no choice but to send a proper
+        # Content-Length up front.
+        "--http1.0",
         "-H", f"Authorization: PVEAPIToken={req.proxmox_token}",
         "-F", "content=import",
         "-F", f"filename=@{req.file_path};filename={req.filename};type=application/octet-stream",
