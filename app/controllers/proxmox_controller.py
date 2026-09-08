@@ -64,6 +64,11 @@ def _run_curl_upload(req: ProxmoxPushRequest) -> dict:
     if not req.tls_verify:
         cmd.insert(1, "-k")
 
+    # Log the exact argv (token redacted) so a failure can be diff'd
+    # byte-for-byte against a manually run curl command with the same file.
+    redacted = [a if not a.startswith("Authorization:") else "Authorization: <redacted>" for a in cmd]
+    logger.info(f"curl upload argv: {redacted}")
+
     result = subprocess.run(cmd, capture_output=True, timeout=7200)
     if result.returncode != 0:
         raise RuntimeError(f"curl upload failed (exit {result.returncode}): {result.stderr.decode(errors='replace')}")
