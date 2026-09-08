@@ -9,8 +9,27 @@ from app.schemas.requests import VmPushRequest
 logger = logging.getLogger(__name__)
 
 
+def _mkdir_p_remote(client, remote_dir: str):
+    """mkdir -p over exec_command, waiting for and checking the actual exit status
+    -- a fire-and-forget exec_command here silently masked permission/path
+    failures before, only surfacing as a confusing 'No such file' from sftp.put."""
+    if not remote_dir:
+        return
+    _, stdout, stderr = client.exec_command(f"mkdir -p {remote_dir}")
+    exit_code = stdout.channel.recv_exit_status()
+    if exit_code != 0:
+        raise RuntimeError(f"mkdir -p {remote_dir} failed: {stderr.read().decode(errors='replace')}")
+
+
 def _run_sftp_put(req: VmPushRequest):
-    """A single transfer attempt. Raises RuntimeError on any failure -- caller retries."""
+    """
+    A single transfer attempt. Raises RuntimeError on any failure -- caller
+    retries. Handles both a single file (dest_path is the full remote file
+    path) and a whole directory (dest_path is the remote directory the local
+    directory's contents get mirrored into) -- a full HF-format model is a
+    folder of files (config.json, tokenizer files, safetensors shards), not
+    a single file like the template qcow2/GGUF cases.
+    """
     client = paramiko.SSHClient()
     client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     try:
@@ -20,11 +39,17 @@ def _run_sftp_put(req: VmPushRequest):
         )
         sftp = client.open_sftp()
         try:
-            remote_dir = os.path.dirname(req.dest_path)
-            if remote_dir:
-                client.exec_command(f"mkdir -p {remote_dir}")
-                time.sleep(1)
-            sftp.put(req.file_path, req.dest_path)
+            if os.path.isdir(req.file_path):
+                _mkdir_p_remote(client, req.dest_path)
+                for root, dirs, files in os.walk(req.file_path):
+                    rel = os.path.relpath(root, req.file_path)
+                    remote_root = req.dest_path if rel == "." else f"{req.dest_path}/{rel.replace(os.sep, '/')}"
+                    _mkdir_p_remote(client, remote_root)
+                    for fname in files:
+                        sftp.put(os.path.join(root, fname), f"{remote_root}/{fname}")
+            else:
+                _mkdir_p_remote(client, os.path.dirname(req.dest_path))
+                sftp.put(req.file_path, req.dest_path)
         finally:
             sftp.close()
     except Exception as e:
