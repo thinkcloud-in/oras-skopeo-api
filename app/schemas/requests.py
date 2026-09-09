@@ -54,3 +54,33 @@ class GuacamoleLogsDeleteRequest(BaseModel):
 class GuacamoleRecordingsDeleteRequest(BaseModel):
     recordings_path: str = "/recordings"
     retention_days: int = 90
+class ProxmoxPushRequest(BaseModel):
+    file_path: str
+    node_host: str
+    node_name: str
+    filename: str
+    proxmox_token: str
+    storage: str = "local"
+    tls_verify: bool = False
+    # How long to wait for the Proxmox import task to finish after the
+    # upload completes -- separate from the upload's own timeout, since
+    # Proxmox still has to write/verify the file after receiving it.
+    poll_timeout: int = 3600
+    # Retries the curl upload itself on failure (network blip, momentary
+    # Proxmox unavailability) -- deliberately NOT re-pulling from Harbor,
+    # since the file is already staged here; only the upload is retried.
+    max_retries: int = 3
+    retry_delay_seconds: int = 15
+
+
+class VmPushRequest(BaseModel):
+    file_path: str
+    vm_host: str
+    vm_ssh_user: str
+    vm_ssh_pass: str
+    dest_path: str
+    # Retries the SFTP transfer itself on failure -- deliberately NOT
+    # re-pulling from Harbor, since the file is already staged here; only
+    # the transfer to the VM is retried.
+    max_retries: int = 3
+    retry_delay_seconds: int = 15
