@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         APP_NAME        = "devraq-oras-skopeo-api"
-        IMAGE_TAG       = "1.0.0"
+        IMAGE_TAG       = "1.1.1"
 
         WORKDIR         = "/home/admin-01/Desktop/rcv/oras-skopeo-api"
         TAR_DIR         = "/home/admin-01/Desktop/rcv/tar"
