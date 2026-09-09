@@ -47,6 +47,13 @@ class OrasPullRequest(BaseModel):
     plain_http: bool = True
 
 
+class GuacamoleLogsDeleteRequest(BaseModel):
+    retention_days: int = 90
+
+
+class GuacamoleRecordingsDeleteRequest(BaseModel):
+    recordings_path: str = "/recordings"
+    retention_days: int = 90
 class ProxmoxPushRequest(BaseModel):
     file_path: str
     node_host: str
