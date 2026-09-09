@@ -45,3 +45,12 @@ class OrasPullRequest(BaseModel):
     tag: str
     dest_dir: str = "/library/harbor/pull_artifacts"
     plain_http: bool = True
+
+
+class GuacamoleLogsDeleteRequest(BaseModel):
+    retention_days: int = 90
+
+
+class GuacamoleRecordingsDeleteRequest(BaseModel):
+    recordings_path: str = "/recordings"
+    retention_days: int = 90

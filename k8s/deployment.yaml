@@ -22,6 +22,27 @@ spec:
           imagePullPolicy: Never
           ports:
             - containerPort: 8009
+          # Guacamole DB connection for /guacamole/logs/delete — caller never
+          # passes credentials, they come from the pod's own env only.
+          # NOTE: verify GUAC_DB_HOST matches the actual Postgres Service name
+          # in the thinkcloud namespace (see daas_v1/database/*.yaml).
+          env:
+            - name: GUAC_DB_HOST
+              value: "postgres"
+            - name: GUAC_DB_PORT
+              value: "5432"
+            - name: GUAC_DB_NAME
+              value: "guacamole"
+            - name: GUAC_DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: devraq-postgres-secret
+                  key: username
+            - name: GUAC_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: devraq-postgres-secret
+                  key: password
           resources:
             requests:
               cpu: "100m"
@@ -46,7 +67,13 @@ spec:
             # (source_path, file_path, dest_dir) — shares the same PVC as backend/frontend.
             - name: library-storage
               mountPath: /library
+            # guacamole/recordings/delete needs the same recordings volume Guacamole writes to.
+            - name: recordings-vol
+              mountPath: /recordings
       volumes:
         - name: library-storage
           persistentVolumeClaim:
             claimName: library-pvc
+        - name: recordings-vol
+          persistentVolumeClaim:
+            claimName: guacamole-recordings-pvc
