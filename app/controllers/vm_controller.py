@@ -7,7 +7,7 @@ from fastapi import HTTPException
 from app.schemas.requests import VmPushRequest
 
 logger = logging.getLogger(__name__)
-
+#test-cmnt
 
 def _mkdir_p_remote(client, remote_dir: str):
     """mkdir -p over exec_command, waiting for and checking the actual exit status
